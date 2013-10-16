@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
+import zipfile
 from pygraphml.GraphMLParser import *
 from pygraphml.Graph import *
 from pygraphml.Node import *
@@ -54,7 +55,7 @@ wirelessAPData = ""
 #Gmail 
 google_username = "@gmail.com"
 google_password = ""
-google_drive_collection = ""
+google_drive_collection = "kkk"
 
 #Instagram
 #http://instagram.com/developer/register/
@@ -1107,7 +1108,7 @@ def usernameSearch(username):
 	urlList.append("https://www.facebook.com/"+username)
 	urlList.append("https://www.youtube.com/user/"+username+"/feed")
 	urlList.append("http://instagram.com/"+username)
-	"""
+	
 	for url in urlList:
 		print "\n[*] Searching for valid accounts: "+url
 		resp = requests.head(url)
@@ -1121,8 +1122,7 @@ def usernameSearch(username):
 	retrieveLinkedinData(username)
 	print "\n[*] Searching for valid accounts on Google Search"
 	retrieveGoogleResults(username)
-	"""
-
+	
 def createMaltego():
 	print "\n[*] Create Maltego Mtgx File..."		
 	g = Graph()
@@ -1304,9 +1304,9 @@ print "MMMMMMMMNINMMMMMMMMMMMMMMMMMZIMMMMMMMMMM"
 print "MMMMMMMMMIMMMMMMMMMMMMMMMMMM8IMMMMMMMMMM"
 
 print "\n**********************************************************"
-print "****** GeoStalking Version 1.0 HackInTheBox Release ******"
+print "****** GeoStalker Version 1.0 HackInTheBox Release ******"
 print "**********************************************************\n"
-input = "blk 547 jurong west st 42 singapore"
+input = ""
 #input = "252 North Bridge Road singapore"
 input = raw_input("Please enter an address or GPS coordinates (e.g. 4.237588,101.131332): ")
 while len(input.strip())<1:
