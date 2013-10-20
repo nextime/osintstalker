@@ -1304,13 +1304,16 @@ def geoLocationSearch(lat,lng):
 	#Twitter End
 
 	print "\n[*] Create Google Map using Flickr/Instagram/Twitter Geolocation Data"		
+
 	htmlfile.write('<br><br>')
 	htmlfile.write('<br><b>Google Map based on Flickr/Instagram/Twitter Geolocation Data</b><br>')
 	htmlfile.write(html.encode('utf8','replace'))
 	htmlfile.write('</body></html>')
 	htmlfile.close()
 
-	"""	
+	print "\n[*] Create Maltego File using Flickr/Instagram/Twitter Geolocation Data"		
+	createMaltegoGeolocation()
+
 	#new
 	print "\n[*] Checking additional social networks for active accounts... "
 	g = Graph()
@@ -1373,7 +1376,7 @@ def geoLocationSearch(lat,lng):
 				   	nodeList[counter1] = g.add_node("Secondary_"+str(secondaryCount))
    					nodeList[counter1]['node'] = createNodeUrl(url,str(url))
    					edgeList[counter2] = g.add_edge(nodeList[lastCounter], nodeList[counter1])
-   					edgeList[counter2]['link'] = createLink('Twitter_')
+   					edgeList[counter2]['link'] = createLink('Link_')
 		    			nodeList.append("")
 		 	   		edgeList.append("")  
  					counter1+=1
@@ -1395,7 +1398,6 @@ def geoLocationSearch(lat,lng):
 	zf.write('Graphs/Graph1.graphml')
 	print 'Closing'
 	zf.close()
-	"""
 print ""
 print "MMMMMM$ZMMMMMDIMMMMMMMMNIMMMMMMIDMMMMMMM"
 print "MMMMMMNINMMMMDINMMMMMMMZIMMMMMZIMMMMMMMM"
@@ -1495,6 +1497,4 @@ filename = 'maltego_'+lat+'_'+lng+'.mtgx'
 altfilename = 'maltego_'+lat+'_'+lng+'_all_searches.mtgx'
 print "[*] Please refer to '"+filename+"' for generated Maltego File containing nearby results from social media sites."		
 print "[*] Please refer to '"+altfilename+"' for generated Maltego File containing above plus mapping to other social media accounts (huge map)."		
-#createMaltegoGeolocation()
-#createMaltegoUsername()
 
