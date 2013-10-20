@@ -1245,7 +1245,7 @@ def createMaltegoUsername():
 	filename = 'Graphs/Graph1.graphml'
 	parser.write(g, "Graphs/Graph1.graphml")
 	cleanUpGraph(filename)
-	filename = 'maltego1.mtgx'
+	filename = 'maltego_'+lat+'_'+lng+'.mtgx'
 	print 'Creating archive: '+filename
 	zf = zipfile.ZipFile(filename, mode='w')
 	print 'Adding Graph1.graphml'
@@ -1387,7 +1387,7 @@ def geoLocationSearch(lat,lng):
 	parser.write(g, "Graphs/Graph1.graphml")
 
 	cleanUpGraph(filename)
-	filename = 'maltego3.mtgx'
+	filename = 'maltego_'+lat+'_'+lng+'_all_searches.mtgx'
 	print 'Creating archive: '+filename
 	zf = zipfile.ZipFile(filename, mode='w')
 	print 'Adding Graph1.graphml'
@@ -1427,7 +1427,7 @@ print "****** GeoStalker Version 1.0 HackInTheBox Release ******"
 print "**********************************************************\n"
 input = ""
 #input = "252 North Bridge Road singapore"
-input = raw_input("Please enter an address or GPS coordinates (e.g. 4.237588,101.131332): ")
+input = raw_input("Please enter an address or GPS coordinates (e.g. 1.358143,103.944826): ")
 while len(input.strip())<1:
 	input = raw_input("Please enter an address or GPS coordinates (e.g. 4.237588,101.131332): ")
 try:	
