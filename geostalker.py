@@ -6,6 +6,7 @@ from pygraphml.GraphMLParser import *
 from pygraphml.Graph import *
 from pygraphml.Node import *
 from pygraphml.Edge import *
+from random import randint
 from BeautifulSoup import BeautifulSoup
 from datetime import date
 from google import search
@@ -96,7 +97,6 @@ lng = ''
 htmlHeader = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta charset="UTF-8"><title>Google Maps Example</title><script src=\'http://code.jquery.com/jquery.min.js\' type=\'text/javascript\'></script></head><body><script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>'
 
 def createDatabase():
-	conn = sqlite3.connect('geostalking.db')
 	c = conn.cursor()
 	sql = 'create table if not exists twitter (username TEXT, tweet TEXT unique, latitude TEXT, longitude TEXT , origLat TEXT, origLng TEXT)'
 	sql1 = 'create table if not exists instagram (username TEXT, latitude TEXT, longitude TEXT, url TEXT unique , origLat TEXT, origLng TEXT)'
@@ -110,8 +110,8 @@ def createDatabase():
 	conn.commit()
 	
 
-createDatabase()
 conn = sqlite3.connect('geostalking.db')
+createDatabase()
 
 def normalize(s):
 	if type(s) == unicode: 
@@ -654,13 +654,16 @@ def retrieveGoogleResults(username):
 	report += '\n\n[*] Google Search Results for: '+str(username)
 	results = []
 	keyword = username
-	tmpStr = "\n************ Google Search Results for "+username+" ************\n\n"
-	for url in search(keyword, stop=20):
+	tmpStr = "\n************ Google Search Results for "+username+" ************\n"
+	print tmlStr
+	for url in search(keyword, stop=20)
 		results.append(url)
 	google.cookie_jar.clear()
 	for i in results:
+		print i
 		tmpStr += i+'\n'
 		report += '\n'+str(normalize(i))
+	print "\n"
 	return tmpStr
 
 def retrieveLinkedinData(username):
@@ -1246,7 +1249,7 @@ def createMaltegoUsername():
 	filename = 'Graphs/Graph1.graphml'
 	parser.write(g, "Graphs/Graph1.graphml")
 	cleanUpGraph(filename)
-	filename = 'maltego_'+lat+'_'+lng+'.mtgx'
+	filename = 'maltego1.mtgx'
 	print 'Creating archive: '+filename
 	zf = zipfile.ZipFile(filename, mode='w')
 	print 'Adding Graph1.graphml'
@@ -1266,12 +1269,11 @@ def geoLocationSearch(lat,lng):
 	html += '<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>'
 	htmlfile.write(html)
 	htmlfile.write('<br><b>Wireless Access Point Database Lookup from Wigle.net</b><br>')
-	if len(wigle_cookie)>0:
-		html1 = downloadWigle(lat,lng)    	
-		htmlfile.write(html1)	
+	html1 = downloadWigle(lat,lng)    	
+	htmlfile.write(html1)
 
-		filename = str(lat)+'_'+str(lng)+'.dat'
-		parseWigleDat(filename)
+	filename = str(lat)+'_'+str(lng)+'.dat'
+	parseWigleDat(filename)
 	gpsPoints = []
 		
 	#Foursquare Start
@@ -1304,15 +1306,11 @@ def geoLocationSearch(lat,lng):
 	#Twitter End
 
 	print "\n[*] Create Google Map using Flickr/Instagram/Twitter Geolocation Data"		
-
 	htmlfile.write('<br><br>')
 	htmlfile.write('<br><b>Google Map based on Flickr/Instagram/Twitter Geolocation Data</b><br>')
 	htmlfile.write(html.encode('utf8','replace'))
 	htmlfile.write('</body></html>')
 	htmlfile.close()
-
-	print "\n[*] Create Maltego File using Flickr/Instagram/Twitter Geolocation Data"		
-	createMaltegoGeolocation()
 
 	#new
 	print "\n[*] Checking additional social networks for active accounts... "
@@ -1344,7 +1342,18 @@ def geoLocationSearch(lat,lng):
 		username = username.replace("(u'","")
 		username = username.replace("',)","")
 
-		#usernameSearch(x)
+	       	googlePlusSearch(username)
+	        if len(linkedin_oauth_user_token)>0:
+	               	print "\n[*] Searching for valid accounts on Linkedin"
+                	retrieveLinkedinData(username)
+
+	        print "\n[*] Searching for valid accounts on Google Search"
+		randNum = randint(5,10)
+		print "Sleeping for "+str(randNum)+" seconds to prevent Google bot detection"
+		time.sleep(randNum)
+
+        	retrieveGoogleResults(username)
+
 		nodeUid = ""
 
 		url = str(username)
@@ -1373,6 +1382,7 @@ def geoLocationSearch(lat,lng):
 				resp = requests.head(url)
 				if resp.status_code==200:
 					print "[*] Found: "+url
+					report+= "\nFound :"+url
 				   	nodeList[counter1] = g.add_node("Secondary_"+str(secondaryCount))
    					nodeList[counter1]['node'] = createNodeUrl(url,str(url))
    					edgeList[counter2] = g.add_edge(nodeList[lastCounter], nodeList[counter1])
@@ -1391,7 +1401,7 @@ def geoLocationSearch(lat,lng):
 	parser.write(g, "Graphs/Graph1.graphml")
 
 	cleanUpGraph(filename)
-	filename = 'maltego_'+lat+'_'+lng+'_all_searches.mtgx'
+	filename = 'maltego3.mtgx'
 	print 'Creating archive: '+filename
 	zf = zipfile.ZipFile(filename, mode='w')
 	print 'Adding Graph1.graphml'
@@ -1430,7 +1440,7 @@ print "****** GeoStalker Version 1.0 HackInTheBox Release ******"
 print "**********************************************************\n"
 input = ""
 #input = "252 North Bridge Road singapore"
-input = raw_input("Please enter an address or GPS coordinates (e.g. 1.358143,103.944826): ")
+input = raw_input("Please enter an address or GPS coordinates (e.g. 4.237588,101.131332): ")
 while len(input.strip())<1:
 	input = raw_input("Please enter an address or GPS coordinates (e.g. 4.237588,101.131332): ")
 try:	
@@ -1495,6 +1505,8 @@ reportFile.close()
 print "[*] Please refer to 'result.html' for generated Google Maps."		
 filename = 'maltego_'+lat+'_'+lng+'.mtgx'
 altfilename = 'maltego_'+lat+'_'+lng+'_all_searches.mtgx'
-print "[*] Please refer to '"+filename+"' for generated Maltego File containing nearby results from social media sites."		
-print "[*] Please refer to '"+altfilename+"' for generated Maltego File containing above plus mapping to other social media accounts (huge map)."		
+print "[*] Please refer to '"+filename+"' for generated Maltego File containing nearby results from social media sites."
+print "[*] Please refer to '"+altfilename+"' for generated Maltego File containing above plus mapping to other social media accounts (huge map)."
+#createMaltegoGeolocation()
+#createMaltegoUsername()
 
