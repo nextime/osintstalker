@@ -1470,7 +1470,7 @@ input = ""
 #input = "252 North Bridge Road singapore"
 input = raw_input("Please enter an address or GPS coordinates (e.g. 1.358143,103.944826): ")
 while len(input.strip())<1:
-	input = raw_input("Please enter an address or GPS coordinates (e.g. 4.237588,101.131332): ")
+	input = raw_input("Please enter an address or GPS coordinates (e.g. 1.358143,103.944826): ")
 try:	
 	if any(c.isalpha() for c in input):
 		lat,lng = address2geocoordinate(input)
