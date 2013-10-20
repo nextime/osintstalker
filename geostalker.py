@@ -23,6 +23,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from StringIO import StringIO
 from termcolor import colored, cprint
 from TwitterSearch import *
+from requests import session
 from xml.dom import minidom
 import atom.data, gdata.client, gdata.docs.client, gdata.docs.data, gdata.docs.service
 import cookielib
@@ -87,7 +88,8 @@ twitter_access_key = ""
 twitter_access_secret = ""
 
 #Wigle.net
-wigle_cookie = ""
+wigle_username = ""
+wigle_password = ""
 
 requests.adapters.DEFAULT_RETRIES = 30
 
@@ -118,7 +120,6 @@ def normalize(s):
        		return s.encode('utf8', 'ignore')
 	else:
         	return str(s)
-
 def createLink(label):
 	xmlString = '<mtg:MaltegoLink xmlns:mtg="http://maltego.paterva.com/xml/mtgx" type="maltego.link.manual-link">'
 	xmlString += '<mtg:Properties>'
@@ -430,6 +431,29 @@ def changePublicGoogleDocs(filename):
         print 'Permissions change success!'
         return docsclient.GetResource(folder).resource_id.text
 
+def loginWigle(wigle_username,wigle_password):
+	payload = {
+		'credential_0': wigle_username,
+		'credential_1': wigle_password,
+		'destination': '%2Fgps%2Fgps%2Fmain',
+		'noexpire': 'on'
+	}
+	headers = {
+		"Content-Type": "application/x-www-form-urlencoded",
+		"Connection": "keep-alive",
+		"Host": "wigle.net",
+		"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:24.0) Gecko/20100101 Firefox/24.0",
+		"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+		"Accept-Language": "en-US,en;q=0.5",
+		"Accept-Encoding": "1",
+		"Referer":"https://wigle.net/",
+		"Content-Length": "85"
+	}
+	with session() as c:
+		request = c.post('https://wigle.net//gps/gps/main/login', data=payload, headers=headers)
+	wigle_cookie = request.headers.get('Set-Cookie')
+	return wigle_cookie
+
 def wigleHTML(inputHTML):
 	html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
 	html += '<html xmlns="http://www.w3.org/1999/xhtml">'
@@ -592,7 +616,7 @@ def parseWigleDat(filename):
 		counter+=1
 	"""
 	
-def downloadWigle(lat,lng):
+def downloadWigle(lat,lng,wigle_cookie):
 	print "[*] Downloading Wigle database from Internet"
 	variance=0.002
 	lat1 = str(float(lat)+variance)
@@ -655,8 +679,8 @@ def retrieveGoogleResults(username):
 	results = []
 	keyword = username
 	tmpStr = "\n************ Google Search Results for "+username+" ************\n"
-	print tmlStr
-	for url in search(keyword, stop=20)
+	print tmpStr
+	for url in search(keyword, stop=20):
 		results.append(url)
 	google.cookie_jar.clear()
 	for i in results:
@@ -1269,11 +1293,14 @@ def geoLocationSearch(lat,lng):
 	html += '<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>'
 	htmlfile.write(html)
 	htmlfile.write('<br><b>Wireless Access Point Database Lookup from Wigle.net</b><br>')
-	html1 = downloadWigle(lat,lng)    	
-	htmlfile.write(html1)
+	
+	if len(wigle_username)>0:
+		wigle_cookie = loginWigle(wigle_username, wigle_password)
+		html1 = downloadWigle(lat,lng,wigle_cookie)    	
+		htmlfile.write(html1)
 
-	filename = str(lat)+'_'+str(lng)+'.dat'
-	parseWigleDat(filename)
+		filename = str(lat)+'_'+str(lng)+'.dat'
+		parseWigleDat(filename)
 	gpsPoints = []
 		
 	#Foursquare Start
@@ -1348,11 +1375,12 @@ def geoLocationSearch(lat,lng):
                 	retrieveLinkedinData(username)
 
 	        print "\n[*] Searching for valid accounts on Google Search"
-		randNum = randint(5,10)
+		randNum = randint(10,20)
 		print "Sleeping for "+str(randNum)+" seconds to prevent Google bot detection"
 		time.sleep(randNum)
 
         	retrieveGoogleResults(username)
+
 
 		nodeUid = ""
 
