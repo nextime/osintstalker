@@ -109,8 +109,8 @@ def createDatabase():
 	conn.commit()
 	
 
-conn = sqlite3.connect('geostalking.db')
 createDatabase()
+conn = sqlite3.connect('geostalking.db')
 
 def normalize(s):
 	if type(s) == unicode: 
