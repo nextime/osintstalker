@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+#!/usr/env python
+#-*- coding: utf-8 -*-
 from __future__ import division
 import zipfile
 from pygraphml.GraphMLParser import *
@@ -11,7 +12,6 @@ from google import search
 from instagram.client import InstagramAPI
 from linkedin import linkedin
 from lxml import etree,html
-from multiprocessing import Process, Value, Array
 from pprint import pprint
 from pygeocoder import Geocoder
 from selenium import webdriver
@@ -24,7 +24,6 @@ from termcolor import colored, cprint
 from TwitterSearch import *
 from xml.dom import minidom
 import atom.data, gdata.client, gdata.docs.client, gdata.docs.data, gdata.docs.service
-import codecs
 import cookielib
 import foursquare
 import geopy
@@ -32,8 +31,6 @@ import geopy.distance
 import google
 import httplib,httplib2,json
 import lxml
-import multiprocessing
-import numpy
 import oauth2 as oauth
 import os
 import re
@@ -53,17 +50,13 @@ maltegoXML = ''
 wirelessAPData = ""
 
 #Gmail 
-google_username = "@gmail.com"
+google_username = ""
 google_password = ""
 google_drive_collection = "kkk"
 
 #Instagram
-#http://instagram.com/developer/register/
-instagram_client_id = ""
-instagram_client_secret = ""
 instagram_access_token = ""
 
-#Foursquare
 #Foursquare
 foursquare_client_id = ""
 foursquare_client_secret = ""
@@ -286,32 +279,23 @@ def createGoogleMap(dataList,lat,lng):
 	html += '		bikeLayer.setMap(map);'
  	html += '   }'
 	html += '   var sites = ['
-
 	
 	for i in dataList:	
-
 		popupHtml = ''
-		#popupHtml += "<b>"+i[0]+"</b><br>"
 		popupHtml += i[0]+'<br>'
 		popupHtml += i[1]+','+i[2]+'<br>'
-		moreInfo = normalize(i[4])
+		moreInfo = i[4]
 		popupHtml += moreInfo
-		#+'<br>'
-		"""
+		popupHtml = popupHtml.replace('\n',' ').replace('\r',' ')
 		
-		#popupHtml = ''
-		#popupHtml += '<b>'+i[0]+'</b><br>'
-		#popupHtml += i[1]+','+i[2]+'<br>'
-		#moreInfo = i[4].replace("'","\\'")
-		moreInfo = i[4].encode('utf8')
-		popupHtml += moreInfo+'<br>'
-		"""
 		if len(i[3].strip())<1:
 			i[3] = 'http://img820.imageshack.us/img820/9217/gtz7.png'
 			#i[3]='https://maps.google.com/mapfiles/kml/shapes/man.png'
 		#point = '["'+i[0]+'","'+i[1]+'","'+i[2]+'","'+i[3]+'",'"+popupHtml+"'],"
-		#point = "['"+i[0]+"',"+i[1]+","+i[2]+" ,'"+i[3]+"','"+popupHtml+"'],"
-		point = "[\""+i[0]+"\","+i[1]+","+i[2]+" ,'"+i[3]+"','"+popupHtml+"'],"
+		point = "['"+i[0]+"',"+i[1]+","+i[2]+" ,'"+i[3]+"','"+popupHtml+"'],"
+		#point = "['"+i[0]+"',"+i[1]+","+i[2]+" ,'"+i[3]+"','"+str(normalize(popupHtml.encode('ascii','replace')))+"'],"
+		#point = "['"+i[0]+"',"+i[1]+","+i[2]+" ,'"+i[3]+"',''],"
+		#point = "[\""+str(normalize(i[0].encode('ascii','replace')))+"\","+str(normalize(i[1].encode('ascii','replace')))+","+str(normalize(i[2].encode('ascii','replace')))+" ,'"+str(normalize(i[3].encode('ascii','replace')))+"','"+str(normalize(popupHtml.encode('ascii','replace')))+"'],"
 		html += point	
 			
 	html += '    ];'
@@ -942,11 +926,15 @@ def retrieveTwitterResults(lat,lng):
 					tweetText = ''
 					try:
 						tweetText = tweet['text'].replace("'","\\'")
-						tweetText = tweetText.encode('ascii','ignore')
+						tweetText = str(normalize(tweetText.encode('ascii','ignore')))
+						print tweetText
 					except: 
 						continue
 					global tweetList				
+					#tweetList.append(['https://www.twitter.com/'+str(normalize(tweet['user']['screen_name'])),geoLat, geoLng,'',''])
+					#tweetList.append(['https://www.twitter.com/'+str(normalize(tweet['user']['screen_name'])),geoLat, geoLng,'',tweetText])
 					tweetList.append(['https://www.twitter.com/'+str(normalize(tweet['user']['screen_name'])),geoLat, geoLng,'',tweetText])
+
 					global globalUserList
 					if str(normalize(tweet['user']['screen_name'])) not in globalUserList:
 						globalUserList.append(str(normalize(tweet['user']['screen_name'])))
@@ -1118,12 +1106,14 @@ def usernameSearch(username):
 			report+= "\nFound :"+url
 	print "\n[*] Searching for valid accounts on Google+"
 	googlePlusSearch(username)
-	print "\n[*] Searching for valid accounts on Linkedin"
-	retrieveLinkedinData(username)
+	if len(linkedin_oauth_user_token)>0:	
+		print "\n[*] Searching for valid accounts on Linkedin"
+		retrieveLinkedinData(username)
+	
 	print "\n[*] Searching for valid accounts on Google Search"
 	retrieveGoogleResults(username)
 	
-def createMaltego():
+def createMaltegoGeolocation():
 	print "\n[*] Create Maltego Mtgx File..."		
 	g = Graph()
 	totalCount = 50
@@ -1190,7 +1180,7 @@ def createMaltego():
 		if i[0] not in userList:
 			userList.append(i[0])
 			try:
-			   	nodeList[counter1] = g.add_node("Twitter_"+str(i[0]))
+			   	nodeList[counter1] = g.add_node("Twitter1_"+str(i[0]))
    				nodeList[counter1]['node'] = createNodeUrl(i[0],str(i[0]))
    				edgeList[counter2] = g.add_edge(nodeList[0], nodeList[counter1])
    				edgeList[counter2]['link'] = createLink('Twitter_')
@@ -1214,7 +1204,55 @@ def createMaltego():
 	print 'Closing'
 	zf.close()
 
-	
+def createMaltegoUsername():
+	print "\n[*] Create Maltego Mtgx File..."		
+	g = Graph()
+	totalCount = 50
+	start = 0
+	nodeList = []
+	edgeList = []
+
+	while(start<totalCount):
+       		nodeList.append("")	
+	        edgeList.append("")
+	        start+=1
+
+	nodeList[0] = g.add_node('original')
+	nodeList[0]['node'] = createNodeLocation(lat,lng)
+
+	counter1=1
+	counter2=0                
+	userList=[]
+
+	nodeUid = ""
+	for i in globalUserList:
+		i = i.encode('ascii','replace')
+		print i
+		try:
+		   	nodeList[counter1] = g.add_node("Twitter1_"+str(i))
+   			nodeList[counter1]['node'] = createNodeUrl(i,str(i))
+   			edgeList[counter2] = g.add_edge(nodeList[0], nodeList[counter1])
+   			edgeList[counter2]['link'] = createLink('Twitter_')
+    			nodeList.append("")
+ 	   		edgeList.append("")
+    			counter1+=1
+    			counter2+=1
+		except IndexError:
+			continue
+	parser = GraphMLParser()
+	if not os.path.exists(os.getcwd()+'/Graphs'):
+    		os.makedirs(os.getcwd()+'/Graphs')
+	filename = 'Graphs/Graph1.graphml'
+	parser.write(g, "Graphs/Graph1.graphml")
+	cleanUpGraph(filename)
+	filename = 'maltego1.mtgx'
+	print 'Creating archive: '+filename
+	zf = zipfile.ZipFile(filename, mode='w')
+	print 'Adding Graph1.graphml'
+	zf.write('Graphs/Graph1.graphml')
+	print 'Closing'
+	zf.close()
+
 def geoLocationSearch(lat,lng):
 	htmlfile = open("result.html", "w")
 	html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
@@ -1227,38 +1265,40 @@ def geoLocationSearch(lat,lng):
 	html += '<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>'
 	htmlfile.write(html)
 	htmlfile.write('<br><b>Wireless Access Point Database Lookup from Wigle.net</b><br>')
-	html1 = downloadWigle(lat,lng)    	
-	htmlfile.write(html1)
-	#htmlfile.write('<br><br>'+wirelessAPData+'<br><br>')
+	if len(wigle_cookie)>0:
+		html1 = downloadWigle(lat,lng)    	
+		htmlfile.write(html1)	
 
-	
-	filename = str(lat)+'_'+str(lng)+'.dat'
-	parseWigleDat(filename)
+		filename = str(lat)+'_'+str(lng)+'.dat'
+		parseWigleDat(filename)
 	gpsPoints = []
-
 		
 	#Foursquare Start
-	dataList = retrieve4sqData(lat,lng)
-	gpsPoints.extend(dataList)
+	if len(foursquare_access_token)>0:
+		dataList = retrieve4sqData(lat,lng)
+		gpsPoints.extend(dataList)
 	
 	#Instagram Start
-	dataList = retrieveInstagramData(lat,lng)
-	if dataList:
-		gpsPoints.extend(dataList)
-		write2Database('instagram',dataList)
+	if len(instagram_access_token)>0:
+		dataList = retrieveInstagramData(lat,lng)
+		if dataList:
+			gpsPoints.extend(dataList)
+			write2Database('instagram',dataList)
 	#Flickr Start
-	dataList1 = retrieveFlickrData(lat,lng)
-	if len(dataList1)>0:
-		write2Database('flickr',dataList1)
-		html = ''
-		for i in dataList1:
-			'<a href="'+i[0]+'">'+i[0]+'</a>'
-			html = '<a href="'+i[0]+'">'+i[0]+'</a><br>'+i[1]+'<br>'+i[3]+'<br>'+'<br>'
-			gpsPoints.append(['http://www.flickr.com/photos/'+i[2],i[4],i[5],'',html])		
+	if len(flickr_oauth_secret)>0:
+		dataList1 = retrieveFlickrData(lat,lng)
+		if len(dataList1)>0:
+			write2Database('flickr',dataList1)
+			html = ''
+			for i in dataList1:
+				html = '<a href="'+i[0]+'">'+i[0]+'</a><br>'+i[1]+'<br>'+i[3]+'<br>'+'<br>'
+				html = html.encode('ascii','replace')
+				gpsPoints.append([('http://www.flickr.com/photos/'+i[2]).encode('ascii','replace'),i[4].encode('ascii','encode'),i[5].encode('ascii','encode'),'',html])		
 
 	#Twitter Start
-	retrieveTwitterResults(lat,lng)
-	gpsPoints.extend(tweetList)
+	if len(twitter_access_secret)>0:
+		retrieveTwitterResults(lat,lng)
+		gpsPoints.extend(tweetList)
 	html = createGoogleMap(gpsPoints,lat,lng)		
 	#Twitter End
 
@@ -1268,14 +1308,93 @@ def geoLocationSearch(lat,lng):
 	htmlfile.write(html.encode('utf8','replace'))
 	htmlfile.write('</body></html>')
 	htmlfile.close()
-	
-	#outputFile.write(html)
-	#outputFile.write('</body></html>')
-	#outputFile.close()
-	
-	for x in globalUserList:
-		x = str(normalize(x))
-		usernameSearch(x)
+
+	"""	
+	#new
+	print "\n[*] Checking additional social networks for active accounts... "
+	g = Graph()
+	totalCount = 50
+	start = 0
+	nodeList = []
+	edgeList = []	
+
+	while(start<totalCount):
+      		nodeList.append("")	
+	        edgeList.append("")
+	        start+=1	
+
+	nodeList[0] = g.add_node('original')
+	nodeList[0]['node'] = createNodeLocation(lat,lng)	
+	counter1=1
+	counter2=0                
+	userList=[]	
+	counter3=0
+	secondaryCount = 0
+
+	global report
+
+	global globalUserList			
+	for username in globalUserList:
+		username = str(normalize(username.encode('ascii','replace')))
+		username = str(username)
+		username = username.replace("(u'","")
+		username = username.replace("',)","")
+
+		#usernameSearch(x)
+		nodeUid = ""
+
+		url = str(username)
+		nodeList[counter1] = g.add_node("Twitter2_"+str(url))
+   		nodeList[counter1]['node'] = createNodeUrl(url,str(url))
+   		edgeList[counter2] = g.add_edge(nodeList[0], nodeList[counter1])
+   		edgeList[counter2]['link'] = createLink('Twitter')	
+
+    		nodeList.append("")
+ 	   	edgeList.append("")	
+
+		lastCounter = counter1
+	    	counter1+=1
+    		counter2+=1
+
+		urlList = []
+		urlList.append("https://www.facebook.com/"+username)
+		urlList.append("https://www.youtube.com/user/"+username+"/feed")
+		urlList.append("http://instagram.com/"+username)
+		urlList.append("https://twitter.com/"+username)
+		
+
+		for url in urlList:
+			#print "\n[*] Searching1 for valid accounts: "+url
+			try:
+				resp = requests.head(url)
+				if resp.status_code==200:
+					print "[*] Found: "+url
+				   	nodeList[counter1] = g.add_node("Secondary_"+str(secondaryCount))
+   					nodeList[counter1]['node'] = createNodeUrl(url,str(url))
+   					edgeList[counter2] = g.add_edge(nodeList[lastCounter], nodeList[counter1])
+   					edgeList[counter2]['link'] = createLink('Twitter_')
+		    			nodeList.append("")
+		 	   		edgeList.append("")  
+ 					counter1+=1
+    					counter2+=1
+					secondaryCount+=1
+			except IndexError:
+				continue
+	parser = GraphMLParser()
+	if not os.path.exists(os.getcwd()+'/Graphs'):
+    		os.makedirs(os.getcwd()+'/Graphs')
+	filename = 'Graphs/Graph1.graphml'
+	parser.write(g, "Graphs/Graph1.graphml")
+
+	cleanUpGraph(filename)
+	filename = 'maltego3.mtgx'
+	print 'Creating archive: '+filename
+	zf = zipfile.ZipFile(filename, mode='w')
+	print 'Adding Graph1.graphml'
+	zf.write('Graphs/Graph1.graphml')
+	print 'Closing'
+	zf.close()
+	"""
 print ""
 print "MMMMMM$ZMMMMMDIMMMMMMMMNIMMMMMMIDMMMMMMM"
 print "MMMMMMNINMMMMDINMMMMMMMZIMMMMMZIMMMMMMMM"
@@ -1325,8 +1444,6 @@ except:
 	pass
 	#print "[!] Geocoding error"
 
-geoLocationSearch(lat,lng)
-
 c = conn.cursor()
 c.execute('select distinct username from instagram where origLat=? and origLng=?',(lat,lng,))
 dataList1 = []
@@ -1356,6 +1473,11 @@ for i in dataList1:
 	x = str(x.replace('https://www.twitter.com/',''))
 	if x not in globalUserList:
 		globalUserList.append(x)
+
+
+#for x in globalUserList:
+#	print x
+geoLocationSearch(lat,lng)
 		
 print "\n[*] Analysis report has been written to 'report.txt'"
 reportFile = open('report.txt', "w")
@@ -1364,7 +1486,14 @@ reportFile.write('\n('+str(lat)+','+str(lng)+')')
 reportFile.write('\n\n[*] Found User IDs in Area')
 for x in globalUserList:
 	reportFile.write('\n'+str(normalize(x)).encode('utf8','ignore'))
+
 reportFile.write(report.encode('utf8','ignore'))
 reportFile.close()
-print "[*] Please refer to 'result.htm' for generated Google Maps."		
-createMaltego()
+print "[*] Please refer to 'result.html' for generated Google Maps."		
+filename = 'maltego_'+lat+'_'+lng+'.mtgx'
+altfilename = 'maltego_'+lat+'_'+lng+'_all_searches.mtgx'
+print "[*] Please refer to '"+filename+"' for generated Maltego File containing nearby results from social media sites."		
+print "[*] Please refer to '"+altfilename+"' for generated Maltego File containing above plus mapping to other social media accounts (huge map)."		
+#createMaltegoGeolocation()
+#createMaltegoUsername()
+
